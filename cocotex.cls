@@ -30,7 +30,8 @@
 \NeedsTeXFormat{LaTeX2e}[2018/12/01]
 \ProvidesClass{cocotex}
     [2024/01/29 0.4.0 cocotex]
-\RequirePackage{kvoptions-patch}
+% kvoptions-patch aborts on formats from 2020-10-01 onward.
+\@ifl@t@r\fmtversion{2020/10/01}{}{\RequirePackage{kvoptions-patch}}
 \RequirePackage{xkeyval}
 \DeclareOptionX{main}{\PassOptionsToPackage{\CurrentOption}{babel}}
 \DeclareOption{es-noindentfirst}{\PassOptionsToPackage{es-noindentfirst}{babel}}
