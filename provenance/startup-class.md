@@ -14,8 +14,9 @@ the existing class and language option processing.
 | Runtime base and retained helper tree | `ed41b568accfed686f30d3e0d83324e59c0235f9` |
 | Effective runtime | The commit containing this receipt; identify it with `git rev-parse HEAD` in the paired checkout |
 
-The original runtime contains 78 tracked files. Its other 77 files remain at
-the base revision's bytes and modes, and the class retains mode `100755`.
+The original runtime contains 78 tracked files. At generation, its other 77
+files retained the base revision's bytes and modes, and the class retained
+mode `100755`.
 In particular, `coco-floats.sty` remains at SHA-256
 `86e51b17da90f8881c584c086d14da94d6b52b3acbe9aa03f51dbecd463cd8f1`.
 The release installer emits thirteen files; only the class is overlaid here.
