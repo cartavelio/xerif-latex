@@ -1,0 +1,58 @@
+name: Runtime parity
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docstrip:
+    name: DocStrip runtime parity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ruby/setup-ruby@f9c4492e86def3e644ab32a0ef185eda5b0c20d0
+        with:
+          ruby-version: '3.1.7'
+      - name: Install TeX Live from the source workflow's Ubuntu snapshot
+        run: |
+          sources="$RUNNER_TEMP/texlive.list"
+          for suite in noble noble-updates noble-security; do
+            echo "deb [check-valid-until=no] https://snapshot.ubuntu.com/ubuntu/20261111T000000Z/ $suite main universe"
+          done > "$sources"
+          apt_sources=(-o "Dir::Etc::sourcelist=$sources" -o Dir::Etc::sourceparts=-)
+          sudo apt-get "${apt_sources[@]}" update
+          sudo apt-get "${apt_sources[@]}" install -y --no-install-recommends texlive-latex-base
+      - name: Generate from the maintained source and compare runtime bytes
+        run: |
+          set -euo pipefail
+          source_pin=f76c3103f2ce500a89ee3bc6a125409bbcfd68e9
+          source_root="$RUNNER_TEMP/cocotex-source"
+          git clone https://github.com/cartavelio/CoCoTeX.git "$source_root"
+          git -C "$source_root" checkout --detach "$source_pin"
+          test "$(git -C "$source_root" rev-parse HEAD)" = "$source_pin"
+          (
+            cd "$source_root"
+            touch source.sh
+            export BUNDLE_APP_CONFIG="$RUNNER_TEMP/bundle-config-build"
+            export BUNDLE_PATH="$RUNNER_TEMP/gems"
+            ( cd lib/ruby && BUNDLE_FROZEN=false bundle install )
+            ./build.sh build --keep-temp --no-color
+            echo '29ac17c9be114cec94af6d661d01eae0e4ea732ab8c1a106f36b909dbf17cfc2  build/cocotex.cls' | sha256sum --check
+            for file in cocotex.cls coco-accessibility.lua coco-{accessibility,common,floats,frame,headings,kernel,lists,meta,notes,script,title}.sty; do
+              cmp "build/$file" "$GITHUB_WORKSPACE/$file"
+            done
+          )
+      - name: Verify retained runtime bytes and Git modes
+        run: |
+          # Only the generated class and documentation/CI metadata may differ.
+          git diff --exit-code ed41b568accfed686f30d3e0d83324e59c0235f9 HEAD -- . \
+            ':(exclude)cocotex.cls' ':(exclude)README.md' \
+            ':(exclude)provenance/**' ':(exclude).github/**'
+          test "$(git ls-tree HEAD cocotex.cls | cut -d ' ' -f 1)" = 100755
