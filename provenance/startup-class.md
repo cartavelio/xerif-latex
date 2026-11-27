@@ -119,7 +119,13 @@ incompatibility warning. The merged source's public
 also passed on the approved head `c38f5a768ac01f1640d3f49b296256331dbd63e4`.
 
 These checks cover startup, output bytes and preservation of the bundle.
-They do not establish float behavior, a full manuscript regression or PDF/UA
+The `Runtime parity` GitHub Actions workflow regenerates the thirteen outputs
+from the maintained source revision above, checks the installed-class digest,
+and compares them with the exact pull-request head. It also checks retained
+runtime bytes and Git modes against the runtime base, allowing documentation
+and CI metadata additions. This hosted check proves byte parity; it does not
+rerun the historical-format startup scenarios.
+These checks do not establish float behavior, a full manuscript regression or PDF/UA
 conformance. Existing Scripello renders used the original component pins with
 their separately recorded startup and float patches; this runtime commit does
 not change those pins or remove those patches.
